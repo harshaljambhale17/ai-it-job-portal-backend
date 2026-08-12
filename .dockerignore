@@ -1,0 +1,22 @@
+# Build output
+target/
+*.jar
+
+# Logs
+*.log
+logs/
+
+# VCS
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Misc (already ignored by git, keep the build context small)
+HELP.md
+.mvn/
+mvnw
+mvnw.cmd
