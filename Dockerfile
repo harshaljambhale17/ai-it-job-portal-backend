@@ -25,4 +25,11 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# JVM memory flags tuned for Render free tier (512 MiB container):
+#   -Xmx256m                  cap heap (Serial GC suits small heaps)
+#   -XX:MaxMetaspaceSize=160m cap loaded-class memory (biggest consumer)
+#   -XX:ReservedCodeCacheSize=64m  cap JIT code cache
+#   -XX:MaxDirectMemorySize=64m    cap direct/NIO buffers (PDFBox/Tika)
+#   -XX:+ExitOnOutOfMemoryError   exit cleanly on heap OOM so Render restarts
+# Expected total footprint: ~350-450 MiB peak, typically 250-350 MiB
+ENTRYPOINT ["java", "-Xmx256m", "-XX:MaxMetaspaceSize=160m", "-XX:ReservedCodeCacheSize=64m", "-XX:+UseSerialGC", "-XX:MaxDirectMemorySize=64m", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]
