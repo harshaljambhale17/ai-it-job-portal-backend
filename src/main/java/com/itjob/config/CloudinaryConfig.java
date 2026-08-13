@@ -45,7 +45,7 @@ public class CloudinaryConfig {
     public Cloudinary getCloudinary() {
         if (cloudinary == null) {
             throw new IllegalStateException(
-                    "Cloudinary is not configured. Please set app.cloudinary.* properties in application-dev.properties"
+                    "Cloudinary is not configured. Please set app.cloudinary.* properties in application properties (env vars)"
             );
         }
         return cloudinary;

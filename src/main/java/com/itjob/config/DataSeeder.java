@@ -70,13 +70,15 @@ public class DataSeeder implements CommandLineRunner {
         seedConfig("auth_enable_registration", "true", "toggle", "Auth & Security", "Allow new user registration");
 
         // ==================== 3. Email (SMTP) Settings ====================
-        // NOTE: smtp_password is NOT seeded here — it is read from application-dev.properties
-        // (app.smtp.password) for security. Non-sensitive SMTP configs remain in the DB.
-        seedConfig("smtp_host", "smtp.gmail.com", "text", "SMTP", "SMTP server hostname");
-        seedConfig("smtp_port", "587", "number", "SMTP", "SMTP server port");
-        seedConfig("smtp_username", "harshaljambhale16", "email", "SMTP", "SMTP authentication username");
-        seedConfig("smtp_sender_email", "harshaljambhale16@gmail.com", "email", "SMTP", "Email address shown in From field");
-        seedConfig("smtp_sender_name", "Harshal Jambhale", "text", "SMTP", "Name shown in From field");
+        // NOTE: smtp_password is NOT seeded here — it is read from application properties
+        // (app.smtp.password) for security. These DB values act as a fallback only;
+        // env vars (SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_SENDER_EMAIL) override them.
+        // SendGrid SMTP runs on port 2525 (Render free tier blocks outbound 25/465/587).
+        seedConfig("smtp_host", "smtp.sendgrid.net", "text", "SMTP", "SMTP server hostname");
+        seedConfig("smtp_port", "2525", "number", "SMTP", "SMTP server port");
+        seedConfig("smtp_username", "apikey", "text", "SMTP", "SMTP authentication username");
+        seedConfig("smtp_sender_email", "noreply@ithunt.com", "email", "SMTP", "Email address shown in From field (must be verified in SendGrid)");
+        seedConfig("smtp_sender_name", "IT Job Hunt", "text", "SMTP", "Name shown in From field");
 
         // ==================== 4. Cloud Storage ====================
         // NOTE: cloudinary_cloud_name, cloudinary_api_key, and cloudinary_api_secret are NOT seeded here.

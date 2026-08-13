@@ -21,6 +21,20 @@ public class EmailServiceImpl implements EmailService {
 
     private final SystemConfigRepo systemConfigRepo;
 
+    // SMTP settings from application properties (env vars on the server).
+    // If set, these take precedence over the system_config DB table.
+    @Value("${app.smtp.host:}")
+    private String smtpHostFromProperties;
+
+    @Value("${app.smtp.port:}")
+    private String smtpPortFromProperties;
+
+    @Value("${app.smtp.username:}")
+    private String smtpUsernameFromProperties;
+
+    @Value("${app.smtp.sender-email:}")
+    private String smtpSenderEmailFromProperties;
+
     @Value("${app.smtp.password:}")
     private String smtpPasswordFromProperties;
 
@@ -30,9 +44,15 @@ public class EmailServiceImpl implements EmailService {
     }
 
     /**
-     * Returns the SMTP password. Checks application.properties first (via @Value),
-     * then falls back to the system_config database table.
+     * Returns the env/properties value if set, otherwise the system_config DB value.
      */
+    private String firstNonEmpty(String fromProperties, String dbValue) {
+        if (fromProperties != null && !fromProperties.isEmpty()) {
+            return fromProperties;
+        }
+        return dbValue;
+    }
+
     private String getSmtpPassword() {
         if (smtpPasswordFromProperties != null && !smtpPasswordFromProperties.isEmpty()) {
             return smtpPasswordFromProperties;
@@ -46,16 +66,17 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private JavaMailSenderImpl createMailSender() {
-        String host = getConfigValue("smtp_host", "smtp.gmail.com");
-        String portStr = getConfigValue("smtp_port", "587");
-        String username = getConfigValue("smtp_username", "");
+        String host = firstNonEmpty(smtpHostFromProperties, getConfigValue("smtp_host", "smtp.sendgrid.net"));
+        String portStr = firstNonEmpty(smtpPortFromProperties, getConfigValue("smtp_port", "2525"));
+        String username = firstNonEmpty(smtpUsernameFromProperties, getConfigValue("smtp_username", ""));
         String password = getSmtpPassword();
 
         int port;
         try {
             port = Integer.parseInt(portStr);
         } catch (NumberFormatException e) {
-            port = 587;
+            log.warn("Invalid SMTP port '{}' - falling back to 2525", portStr);
+            port = 2525;
         }
 
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
@@ -75,7 +96,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendOtpEmail(String toEmail, String otp, String userType) {
-        String senderEmail = getConfigValue("smtp_sender_email", "noreply@ithunt.com");
+        String senderEmail = firstNonEmpty(smtpSenderEmailFromProperties, getConfigValue("smtp_sender_email", "noreply@ithunt.com"));
         String senderName = getConfigValue("smtp_sender_name", "IT Job Hunt");
         String websiteName = getConfigValue("general_website_name", "IT Job Hunt");
 
@@ -106,7 +127,7 @@ public class EmailServiceImpl implements EmailService {
         JavaMailSenderImpl mailSender = createMailSender();
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(getConfigValue("smtp_sender_email", "noreply@ithunt.com"));
+        message.setFrom(firstNonEmpty(smtpSenderEmailFromProperties, getConfigValue("smtp_sender_email", "noreply@ithunt.com")));
         message.setTo(toEmail);
         message.setSubject("Test Email - SMTP Configuration - " + websiteName);
 

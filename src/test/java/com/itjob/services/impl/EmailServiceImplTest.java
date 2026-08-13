@@ -103,7 +103,7 @@ class EmailServiceImplTest {
     void sendOtpEmail_FallsBackToDefaultsWhenAllConfigsMissing() {
         when(systemConfigRepo.findByConfigKey(anyString())).thenReturn(Optional.empty());
 
-        // Should still attempt connection with default smtp.gmail.com:587
+        // Should still attempt connection with default smtp.sendgrid.net:2525
         assertThrows(MailException.class,
                 () -> emailService.sendOtpEmail("user@test.com", "123456", "Candidate"));
 
@@ -111,14 +111,14 @@ class EmailServiceImplTest {
     }
 
     @Test
-    void sendOtpEmail_FallsBackToPort587WhenPortIsInvalidText() {
+    void sendOtpEmail_FallsBackToPort2525WhenPortIsInvalidText() {
         when(systemConfigRepo.findByConfigKey("smtp_host")).thenReturn(Optional.of(hostConfig));
         when(systemConfigRepo.findByConfigKey("smtp_port")).thenReturn(Optional.of(createConfig("smtp_port", "not-a-number")));
         when(systemConfigRepo.findByConfigKey("smtp_username")).thenReturn(Optional.of(usernameConfig));
         when(systemConfigRepo.findByConfigKey("smtp_password")).thenReturn(Optional.of(passwordConfig));
         mockEmailContentConfigs();
 
-        // Parsing "not-a-number" should fall back to port 587
+        // Parsing "not-a-number" should fall back to port 2525
         assertThrows(MailException.class,
                 () -> emailService.sendOtpEmail("user@test.com", "123456", "Candidate"));
 
